@@ -1,6 +1,3 @@
-// crypto-js hmac-sha1
-import { hmacSHA1 } from "crypto-js/crypto";
-
 class GoogleAuthenticator {
   constructor(
     skew = Math.round(5),
@@ -157,7 +154,7 @@ class GoogleAuthenticator {
 
     // **Important Security Note:**
     // Replace with a secure HMAC-SHA1 implementation that considers key handling and secure random number generation.
-    const hash = await hmacSHA1(key, counterBytes);
+    const hash = await hmacSha1(key, counterBytes);
 
     return this.truncateHOTP(hash);
   }
@@ -176,6 +173,34 @@ class GoogleAuthenticator {
       ((hash[offset + 2] & 0xff) << 8) |
       (hash[offset + 3] & 0xff);
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
+  }
+
+  /**
+   * Compute the HMAC-SHA1 of the given data with the given key.
+   * @param {Uint8Array} data - The data.
+   * @param {Uint8Array} key - The key.
+   * @returns {Uint8Array} - The HMAC-SHA1 hash.
+   */
+  hmacSha1(data, key) {
+    const blockSize = 64;
+    if (key.length > blockSize) {
+      key = new Uint8Array(sha1.arrayBuffer(key));
+    }
+    const ipad = new Uint8Array(blockSize);
+    const opad = new Uint8Array(blockSize);
+    for (let i = 0; i < blockSize; i++) {
+      ipad[i] = key[i] ^ 0x36;
+      opad[i] = key[i] ^ 0x5c;
+    }
+    const inner = new Uint8Array(blockSize + data.length);
+    inner.set(ipad);
+    inner.set(data, blockSize);
+    const outer = new Uint8Array(
+      blockSize + sha1.arrayBuffer(inner).byteLength
+    );
+    outer.set(opad);
+    outer.set(new Uint8Array(sha1.arrayBuffer(inner)), blockSize);
+    return new Uint8Array(sha1.arrayBuffer(outer));
   }
 
   forApp(str, secret) {
