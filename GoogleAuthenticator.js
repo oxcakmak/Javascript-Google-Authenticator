@@ -1,5 +1,5 @@
 // crypto-js hmac-sha1
-import { hmacSHA1 } from "./crypto-js/crypto";
+import { hmacSHA1 } from "./js-google-authenticator/crypto-js/crypto";
 
 class GoogleAuthenticator {
   constructor(
