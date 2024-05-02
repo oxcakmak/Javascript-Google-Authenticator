@@ -86,3 +86,6 @@ class Base32 {
       .join("");
   }
 }
+
+// Export the Base32 class
+module.exports = Base32;

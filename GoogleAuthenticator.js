@@ -1,5 +1,5 @@
-// Import necessary libraries (assuming Base32 is a separate module)
-import Base32 from "./Base32.js"; // Replace with your preferred Base32 library
+// GoogleAuthenticator.js: Google Authenticator class
+const Base32 = require("./Base32.js"); // Assuming Base32.js is in the same directory
 
 class GoogleAuthenticator {
   constructor(
