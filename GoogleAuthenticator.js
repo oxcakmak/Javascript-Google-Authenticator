@@ -108,10 +108,9 @@ class GoogleAuthenticator {
       );
     }
 
-    const base32 = new Base32(Base32.csRFC3548);
     let decodedKey;
     try {
-      decodedKey = await base32.decodeAsync(secretkey);
+      decodedKey = await GoogleAuthenticator.decode(secretkey);
     } catch (error) {
       return Promise.reject(
         new Error("Failed to decode secret key: " + error.message)
@@ -174,6 +173,12 @@ class GoogleAuthenticator {
   }
 
   forApp(str, secret) {
+    if (!str || !secret) {
+      return Promise.reject(
+        new Error("Missing required parameters: str and secret")
+      );
+    }
+
     if (typeof str !== "string") {
       throw new TypeError("Input string expected");
     }
