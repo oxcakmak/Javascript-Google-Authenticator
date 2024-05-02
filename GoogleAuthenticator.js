@@ -1,5 +1,5 @@
 // Import necessary libraries (assuming Base32 is a separate module)
-import Base32 from "Base32"; // Replace with your preferred Base32 library
+import Base32 from "./Base32.js"; // Replace with your preferred Base32 library
 
 class GoogleAuthenticator {
   constructor(
@@ -95,3 +95,5 @@ class GoogleAuthenticator {
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
   }
 }
+
+module.exports = GoogleAuthenticator;
