@@ -47,7 +47,7 @@ class GoogleAuthenticator {
    * @param {string} str The Base32 encoded string.
    * @returns {string} The decoded string.
    * @throws {Error} If the input string is invalid Base32.
-
+   */
   decode(str) {
     if (typeof str !== "string") {
       throw new TypeError("Input string expected");
@@ -59,38 +59,11 @@ class GoogleAuthenticator {
     let decoded = "";
     for (let i = 0; i < str.length; i++) {
       const charIndex = this.charset.indexOf(str[i]);
-      if (charIndex === -1 || str[i] === "=") {
+      /*
+      if (charIndex === -1 || str[i].includes("=")) {
         throw new Error("Invalid character in Base32 string");
       }
-      const binary = charIndex.toString(2).padStart(5, "0");
-      decoded += binary;
-    }
-
-    return this.bin2str(decoded.slice(0, -padLength));
-  }
-  */
-  decode(str) {
-    if (typeof str !== "string") {
-      throw new TypeError("Input string expected");
-    }
-
-    // Validate input length (multiple of 8)
-    if (str.length % 8 !== 0) {
-      throw new InvalidBase32StringError("Invalid input string length");
-    }
-
-    const padLength = (str.length * 5) % 8;
-    str = str.padEnd(str.length + padLength, "=");
-
-    let decoded = "";
-    for (let i = 0; i < str.length; i++) {
-      const charIndex = this.charset.indexOf(str[i]);
-      if (charIndex === -1 || str[i] === "=") {
-        // Improved error handling
-        throw new InvalidBase32StringError(
-          `Invalid character at position ${i}: ${str[i]}`
-        );
-      }
+      */
       const binary = charIndex.toString(2).padStart(5, "0");
       decoded += binary;
     }
