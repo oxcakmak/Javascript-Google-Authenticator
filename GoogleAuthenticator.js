@@ -172,6 +172,18 @@ class GoogleAuthenticator {
       (hash[offset + 3] & 0xff);
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
   }
+
+  forApp(string, secret) {
+    if (typeof str !== "string") {
+      throw new TypeError("Input string expected");
+    }
+
+    if (typeof secret !== "string") {
+      throw new TypeError("Input string expected");
+    }
+
+    return "otpauth://totp/" + string + "?secret=" + secret;
+  }
 }
 
 module.exports = GoogleAuthenticator;

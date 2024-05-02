@@ -39,4 +39,8 @@ console.log(`Code valid: ${isValid}`);
 ```js
 const hotpCode = authenticator.generateHOTP(secretKey, 1234567890);
 console.log(`HOTP code: ${hotpCode}`);
+
+// for qr code:
+const app = authenticator.forApp(string, secretKey);
+console.log(`Google Authenticator App Otp Link: ${app}`);
 ```
