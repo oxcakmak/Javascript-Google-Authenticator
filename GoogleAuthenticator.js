@@ -173,7 +173,7 @@ class GoogleAuthenticator {
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
   }
 
-  forApp(string, secret) {
+  forApp(str, secret) {
     if (typeof str !== "string") {
       throw new TypeError("Input string expected");
     }
@@ -182,7 +182,7 @@ class GoogleAuthenticator {
       throw new TypeError("Input string expected");
     }
 
-    return "otpauth://totp/" + string + "?secret=" + secret;
+    return "otpauth://totp/" + str + "?secret=" + secret;
   }
 }
 
