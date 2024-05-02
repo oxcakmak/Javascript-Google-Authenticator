@@ -1,6 +1,6 @@
 {
   "name": "js-google-authenticator",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "2 step verification function library with Google Authenticator",
   "main": "GoogleAuthenticator.js",
   "scripts": {
@@ -24,6 +24,6 @@
   "homepage": "https://github.com/oxcakmak/Javascript-Google-Authenticator#readme",
   "dependencies": {
     "crypto-js": "^4.2.0",
-    "js-google-authenticator": "^1.1.5"
+    "js-google-authenticator": "^1.1.6"
   }
 }
