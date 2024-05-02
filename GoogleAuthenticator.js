@@ -2,11 +2,7 @@
 const Base32 = require("./Base32.js"); // Assuming Base32.js is in the same directory
 
 class GoogleAuthenticator {
-  constructor(
-    skew = Math.round(
-      window.navigator.userAgent.match(/Chrome\/(\d+)/)?.[1] || 5
-    )
-  ) {
+  constructor(skew = Math.round(5)) {
     // Validate and potentially adjust skew based on environment or security policy
     if (skew < 0 || skew > 15) {
       console.warn("Invalid skew value provided. Using default of 5.");
