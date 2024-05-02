@@ -37,6 +37,7 @@ console.log(`Code valid: ${isValid}`);
 ### How to create a otp key?
 
 ```js
+// not neccessary actually
 const hotpCode = authenticator.generateHOTP(secretKey, 1234567890);
 console.log(`HOTP code: ${hotpCode}`);
 
