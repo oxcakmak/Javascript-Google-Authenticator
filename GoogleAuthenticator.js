@@ -1,6 +1,5 @@
 // crypto-js hmac-sha1
-import { createHmac, WordArray } from "./crypto-js/hmac";
-import { SHA1 } from "./crypto-js/sha1";
+import { createHmac, WordArray, SHA1 } from "./crypto-js/crypto";
 
 class GoogleAuthenticator {
   constructor(
@@ -195,24 +194,6 @@ class GoogleAuthenticator {
     }
 
     return "otpauth://totp/" + str + "?secret=" + secret;
-  }
-
-  hmacSHA1(secretKey, message) {
-    if (!secretKey || !message) {
-      throw new Error("Missing required parameters: secretKey and message");
-    }
-
-    // Convert message to WordArray (required by Crypto-JS)
-    const messageBytes = WordArray.create(message);
-
-    // Create HMAC object using SHA-1 algorithm
-    const hmac = createHmac(SHA1, secretKey);
-
-    // Update HMAC with the message
-    hmac.update(messageBytes);
-
-    // Finalize the HMAC and return the hash (choose desired output format)
-    return hmac.finalize().toString();
   }
 }
 
