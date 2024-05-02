@@ -184,7 +184,7 @@ class GoogleAuthenticator {
   hmacSha1(data, key) {
     const blockSize = 64;
     if (key.length > blockSize) {
-      key = new Uint8Array(sha1.arrayBuffer(key));
+      key = new Uint8Array(sha1(key));
     }
     const ipad = new Uint8Array(blockSize);
     const opad = new Uint8Array(blockSize);
@@ -195,12 +195,123 @@ class GoogleAuthenticator {
     const inner = new Uint8Array(blockSize + data.length);
     inner.set(ipad);
     inner.set(data, blockSize);
-    const outer = new Uint8Array(
-      blockSize + sha1.arrayBuffer(inner).byteLength
-    );
+    const outer = new Uint8Array(blockSize + sha1(inner).byteLength);
     outer.set(opad);
-    outer.set(new Uint8Array(sha1.arrayBuffer(inner)), blockSize);
-    return new Uint8Array(sha1.arrayBuffer(outer));
+    outer.set(new Uint8Array(sha1(inner)), blockSize);
+    return new Uint8Array(sha1(outer));
+  }
+
+  /**
+   * Calculates the SHA-1 hash of a string using the Secure Hash Algorithm 1 (SHA-1)
+   * hashing algorithm.
+   *
+   * @param {string} message The input string to be hashed.
+   * @returns {string} The SHA-1 hash of the message as a 40-character hexadecimal string.
+   * @throws {Error} If the input message is not a string.
+   */
+
+  sha1(str) {
+    function rotateLeft(n, s) {
+      return (n << s) | (n >>> (32 - s));
+    }
+
+    let blockstart;
+    let i;
+    let temp;
+    let A, B, C, D, E;
+    const H = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+
+    const wordArray = [];
+    let strLen = str.length;
+
+    const wordCount = ((strLen + 8) >> 6) + 1;
+    const byteCount = wordCount << 6;
+
+    for (i = 0; i < byteCount; i += 4) {
+      wordArray[i >> 2] |= (str.charCodeAt(i / 4) & 0xff) << (24 - (i % 4) * 8);
+    }
+    wordArray[wordArray.length] = strLen << 3;
+    wordArray[wordArray.length] = strLen >>> 29;
+
+    wordArray[wordArray.length] = 0;
+
+    for (blockstart = 0; blockstart < wordArray.length; blockstart += 16) {
+      for (i = 0; i < 16; i++) {
+        W[i] = wordArray[blockstart + i];
+      }
+      for (i = 16; i <= 79; i++) {
+        W[i] = rotateLeft(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+      }
+
+      A = H[0];
+      B = H[1];
+      C = H[2];
+      D = H[3];
+      E = H[4];
+
+      for (i = 0; i <= 19; i++) {
+        temp =
+          (rotateLeft(A, 5) + ((B & C) | (~B & D)) + E + W[i] + 0x5a827999) &
+          0xffffffff;
+        E = D;
+        D = C;
+        C = rotateLeft(B, 30);
+        B = A;
+        A = temp;
+      }
+
+      for (i = 20; i <= 39; i++) {
+        temp =
+          (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0x6ed9eba1) & 0xffffffff;
+        E = D;
+        D = C;
+        C = rotateLeft(B, 30);
+        B = A;
+        A = temp;
+      }
+
+      for (i = 40; i <= 59; i++) {
+        temp =
+          (rotateLeft(A, 5) +
+            ((B & C) | (B & D) | (C & D)) +
+            E +
+            W[i] +
+            0x8f1bbcdc) &
+          0xffffffff;
+        E = D;
+        D = C;
+        C = rotateLeft(B, 30);
+        B = A;
+        A = temp;
+      }
+
+      for (i = 60; i <= 79; i++) {
+        temp =
+          (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0xca62c1d6) & 0xffffffff;
+        E = D;
+        D = C;
+        C = rotateLeft(B, 30);
+        B = A;
+        A = temp;
+      }
+
+      H[0] = (H[0] + A) & 0xffffffff;
+      H[1] = (H[1] + B) & 0xffffffff;
+      H[2] = (H[2] + C) & 0xffffffff;
+      H[3] = (H[3] + D) & 0xffffffff;
+      H[4] = (H[4] + E) & 0xffffffff;
+    }
+
+    const hash = (
+      H[0] +
+      H[1] * 0x100000000 +
+      H[2] * 0x100000000 * 0x100000000 +
+      H[3] * 0x100000000 * 0x100000000 * 0x100000000 +
+      H[4] * 0x100000000 * 0x100000000 * 0x100000000 * 0x100000000
+    ).toString(16);
+
+    // Pad the hash to make sure it's 40 characters long
+    return "0".repeat(40 - hash.length) + hash;
   }
 
   forApp(str, secret) {
