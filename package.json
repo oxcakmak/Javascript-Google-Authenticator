@@ -1,0 +1,25 @@
+{
+  "name": "google-authenticator",
+  "version": "1.0.0",
+  "description": "2 step verification function library with Google Authenticator",
+  "main": "GoogleAuthenticator.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oxcakmak/Javascript-Google-Authenticator.git"
+  },
+  "keywords": [
+    "google",
+    "auth",
+    "google",
+    "authenticator"
+  ],
+  "author": "oxcakmak",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/oxcakmak/Javascript-Google-Authenticator/issues"
+  },
+  "homepage": "https://github.com/oxcakmak/Javascript-Google-Authenticator#readme"
+}
