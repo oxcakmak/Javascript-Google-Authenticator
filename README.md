@@ -4,6 +4,16 @@ Javascript Google Authenticator
 
 2 step verification function library with Google Authenticator
 
+### İmportant!
+
+```js
+/*
+ * Decode and verify functions are under maintenance because they contain errors.
+ * @
+ * Other functions are working.
+ */
+```
+
 ### Call the package first
 
 ```js
@@ -23,7 +33,6 @@ const code = "123456";
 ### How to create a secret key?
 
 ```js
-// or
 const secretKey = authenticator.encode(text);
 ```
 

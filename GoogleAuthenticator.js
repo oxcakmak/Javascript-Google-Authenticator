@@ -49,8 +49,9 @@ class GoogleAuthenticator {
    * @throws {Error} If the input string is invalid Base32.
    */
   decode(str) {
+    /*
     if (typeof str !== "string") {
-      throw new TypeError("Input string expected");
+      throw new Error("Input string expected");
     }
 
     const padLength = (str.length * 5) % 8;
@@ -59,16 +60,16 @@ class GoogleAuthenticator {
     let decoded = "";
     for (let i = 0; i < str.length; i++) {
       const charIndex = this.charset.indexOf(str[i]);
-      /*
-      if (charIndex === -1 || str[i].includes("=")) {
-        throw new Error("Invalid character in Base32 string");
-      }
-      */
+      
+      // if (charIndex === -1 || str[i].includes("=")) { throw new Error("Invalid character in Base32 string"); }
+      
       const binary = charIndex.toString(2).padStart(5, "0");
       decoded += binary;
     }
 
     return this.bin2str(decoded.slice(0, -padLength));
+    */
+    return "This function is under construction";
   }
 
   /**
@@ -215,92 +216,39 @@ class GoogleAuthenticator {
       return (n << s) | (n >>> (32 - s));
     }
 
-    function sha1(message) {
-      if (typeof message !== "string") {
-        throw new Error("Input message must be a string.");
+    let blockstart;
+    let i;
+    let temp;
+    let A, B, C, D, E;
+    const H = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+
+    const wordArray = [];
+    let strLen = str.length;
+
+    const wordCount = ((strLen + 8) >> 6) + 1;
+    const byteCount = wordCount << 6;
+
+    for (i = 0; i < byteCount; i += 4) {
+      wordArray[i >> 2] |= (str.charAt(i / 4) & 0xff) << (24 - (i % 4) * 8);
+    }
+    wordArray[wordArray.length] = strLen << 3;
+    wordArray[wordArray.length] = strLen >>> 29;
+
+    wordArray[wordArray.length] = 0;
+
+    for (blockstart = 0; blockstart < wordArray.length; blockstart += 16) {
+      for (i = 0; i < 16; i++) {
+        W[i] = wordArray[blockstart + i];
+      }
+      for (i = 16; i <= 79; i++) {
+        W[i] = rotateLeft(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
       }
 
-      // Pre-calculated constants for SHA-1 algorithm
-      const H = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
-
-      // Function to prepare the message schedule (W) for each block
-      function prepareMessageSchedule(block) {
-        const W = new Array(80);
-        for (let i = 0; i < 16; i++) {
-          W[i] = block[i];
-        }
-        for (let i = 16; i < 80; i++) {
-          W[i] = rotateLeft(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
-        }
-        return W;
-      }
-
-      // Function to perform a single SHA-1 processing step
-      function processBlock(A, B, C, D, E, block) {
-        const W = prepareMessageSchedule(block);
-        let temp;
-
-        for (let i = 0; i <= 79; i++) {
-          if (i <= 19) {
-            temp =
-              (rotateLeft(A, 5) +
-                ((B & C) | (~B & D)) +
-                E +
-                W[i] +
-                0x5a827999) &
-              0xffffffff;
-          } else if (i <= 39) {
-            temp =
-              (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0x6ed9eba1) &
-              0xffffffff;
-          } else if (i <= 59) {
-            temp =
-              (rotateLeft(A, 5) +
-                ((B & C) | (B & D) | (C & D)) +
-                E +
-                W[i] +
-                0x8f1bbcdc) &
-              0xffffffff;
-          } else {
-            temp =
-              (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0xca62c1d6) &
-              0xffffffff;
-          }
-
-          E = D;
-          D = C;
-          C = rotateLeft(B, 30);
-          B = A;
-          A = temp;
-        }
-
-        return [A, B, C, D, E];
-      }
-
-      // Pre-process the message string
-      const strLen = message.length;
-      const wordCount = ((strLen + 8) >> 6) + 1;
-      const byteCount = wordCount << 6;
-      const wordArray = new Array(wordCount);
-
-      for (let i = 0; i < byteCount; i++) {
-        // Access characters using charAt and bitwise AND with 0xff
-        wordArray[i >> 2] |=
-          (message.charAt(i / 4) & 0xff) << (24 - (i % 4) * 8);
-      }
-      wordArray[wordArray.length] = strLen << 3;
-      wordArray[wordArray.length] = strLen >>> 29;
-      wordArray[wordArray.length] = 0x5a827999;
-      for (let i = wordArray.length; i < wordArray.length + 4; i++) {
-        wordArray[i] = 0;
-      }
-
-      // Process the message in blocks
-      let A = H[0];
-      let B = H[1];
-      let C = H[2];
-      let D = H[3];
-      let E = H[4];
+      A = H[0];
+      B = H[1];
+      C = H[2];
+      D = H[3];
+      E = H[4];
 
       for (i = 0; i <= 19; i++) {
         temp =
