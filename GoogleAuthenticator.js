@@ -1,7 +1,9 @@
 class GoogleAuthenticator {
   constructor(
     skew = Math.round(5),
-    charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+    charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+    blocksize = 64,
+    sha1BlockSize = 64
   ) {
     // Validate and potentially adjust skew based on environment or security policy
     if (skew < 0 || skew > 15) {
@@ -15,6 +17,11 @@ class GoogleAuthenticator {
       throw new Error("Invalid character set provided");
     }
     this.charset = charset;
+
+    // Block size for SHA1
+    this.blocksize = blocksize;
+    // SHA1 block size is always 64 bytes
+    this.sha1BlockSize = sha1BlockSize;
   }
 
   /**
@@ -49,7 +56,6 @@ class GoogleAuthenticator {
    * @throws {Error} If the input string is invalid Base32.
    */
   decode(str) {
-    /*
     if (typeof str !== "string") {
       throw new Error("Input string expected");
     }
@@ -60,16 +66,16 @@ class GoogleAuthenticator {
     let decoded = "";
     for (let i = 0; i < str.length; i++) {
       const charIndex = this.charset.indexOf(str[i]);
-      
+
       // if (charIndex === -1 || str[i].includes("=")) { throw new Error("Invalid character in Base32 string"); }
-      
+
       const binary = charIndex.toString(2).padStart(5, "0");
       decoded += binary;
     }
 
     return this.bin2str(decoded.slice(0, -padLength));
-    */
-    return "This function is under construction";
+
+    // return "This function is under construction";
   }
 
   /**
@@ -128,6 +134,7 @@ class GoogleAuthenticator {
     }
 
     const timestamp = Math.floor(Date.now() / 30000); // Time in 30-second intervals
+
     for (let i = -this.skew; i <= this.skew; i++) {
       const checkTime = timestamp + i;
       const calculatedCode = await this.generateHOTP(decodedKey, checkTime);
@@ -136,6 +143,7 @@ class GoogleAuthenticator {
         return true;
       }
     }
+
     return false;
   }
 
@@ -176,28 +184,28 @@ class GoogleAuthenticator {
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
   }
 
-  hmacSHA1(message, key) {
-    const blocksize = 64; // Block size for SHA1
-    const sha1BlockSize = 64; // SHA1 block size is always 64 bytes
+  hmacSha1(message, key) {
+    // Ensure key is a string
+    key = String(key);
 
     // If key is longer than blocksize, hash it
-    if (key.length > blocksize) {
+    if (key.length > this.blocksize) {
       key = this.sha1(key);
     }
 
     // If key is shorter than blocksize, pad it with zeros
-    if (key.length < blocksize) {
-      key = key + String.fromCharCode(0).repeat(blocksize - key.length);
+    if (key.length < this.blocksize) {
+      key = key + String.fromCharCode(0).repeat(this.blocksize - key.length);
     }
 
     // XOR key with ipad (0x36)
-    const ipad = Array(blocksize).fill(0x36);
+    const ipad = Array(this.blocksize).fill(0x36);
     for (let i = 0; i < key.length; i++) {
       ipad[i] ^= key.charCodeAt(i);
     }
 
     // XOR key with opad (0x5C)
-    const opad = Array(blocksize).fill(0x5c);
+    const opad = Array(this.blocksize).fill(0x5c);
     for (let i = 0; i < key.length; i++) {
       opad[i] ^= key.charCodeAt(i);
     }
@@ -244,7 +252,8 @@ class GoogleAuthenticator {
 
     // Append 0 <= k < 512 bits '0', so the resulting message length (in bytes) is congruent to 56 (mod 64)
     message += String.fromCharCode(0).repeat(
-      (56 - ((len + 1) % sha1BlockSize) + sha1BlockSize) % sha1BlockSize
+      (56 - ((len + 1) % this.sha1BlockSize) + this.sha1BlockSize) %
+        this.sha1BlockSize
     );
 
     // Append length
@@ -252,7 +261,11 @@ class GoogleAuthenticator {
     message += String.fromCharCode((len << 3) & 0xffffffff);
 
     // Process the message in successive 512-bit chunks
-    for (let offset = 0; offset < message.length; offset += sha1BlockSize) {
+    for (
+      let offset = 0;
+      offset < message.length;
+      offset += this.sha1BlockSize
+    ) {
       // Break chunk into sixteen 32-bit big-endian words
       for (i = 0; i < 16; i++) {
         words[i] =
