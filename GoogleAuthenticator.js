@@ -176,143 +176,136 @@ class GoogleAuthenticator {
     return String(binary % Math.pow(10, 6)).padStart(6, "0");
   }
 
-  /**
-   * Compute the HMAC-SHA1 of the given data with the given key.
-   * @param {Uint8Array} data - The data.
-   * @param {Uint8Array} key - The key.
-   * @returns {Uint8Array} - The HMAC-SHA1 hash.
-   */
-  hmacSha1(data, key) {
-    const blockSize = 64;
-    if (key.length > blockSize) {
-      key = new Uint8Array(sha1(key));
+  hmacSHA1(message, key) {
+    const blocksize = 64; // Block size for SHA1
+    const sha1BlockSize = 64; // SHA1 block size is always 64 bytes
+
+    // If key is longer than blocksize, hash it
+    if (key.length > blocksize) {
+      key = this.sha1(key);
     }
-    const ipad = new Uint8Array(blockSize);
-    const opad = new Uint8Array(blockSize);
-    for (let i = 0; i < blockSize; i++) {
-      ipad[i] = key[i] ^ 0x36;
-      opad[i] = key[i] ^ 0x5c;
+
+    // If key is shorter than blocksize, pad it with zeros
+    if (key.length < blocksize) {
+      key = key + String.fromCharCode(0).repeat(blocksize - key.length);
     }
-    const inner = new Uint8Array(blockSize + data.length);
-    inner.set(ipad);
-    inner.set(data, blockSize);
-    const outer = new Uint8Array(blockSize + this.sha1(inner).byteLength);
-    outer.set(opad);
-    outer.set(new Uint8Array(this.sha1(inner)), blockSize);
-    return new Uint8Array(this.sha1(outer));
+
+    // XOR key with ipad (0x36)
+    const ipad = Array(blocksize).fill(0x36);
+    for (let i = 0; i < key.length; i++) {
+      ipad[i] ^= key.charCodeAt(i);
+    }
+
+    // XOR key with opad (0x5C)
+    const opad = Array(blocksize).fill(0x5c);
+    for (let i = 0; i < key.length; i++) {
+      opad[i] ^= key.charCodeAt(i);
+    }
+
+    // Concatenate ipad with message and hash it
+    const inner = this.sha1(String.fromCharCode.apply(null, ipad) + message);
+
+    // Concatenate opad with inner hash and hash it again
+    const outer = this.sha1(String.fromCharCode.apply(null, opad) + inner);
+
+    return outer;
   }
 
-  /**
-   * Calculates the SHA-1 hash of a string using the Secure Hash Algorithm 1 (SHA-1)
-   * hashing algorithm.
-   *
-   * @param {string} message The input string to be hashed.
-   * @returns {string} The SHA-1 hash of the message as a 40-character hexadecimal string.
-   * @throws {Error} If the input message is not a string.
-   */
-
-  sha1(str) {
+  sha1(message) {
     function rotateLeft(n, s) {
       return (n << s) | (n >>> (32 - s));
     }
 
-    let blockstart;
-    let i;
-    let temp;
-    let A, B, C, D, E;
+    function ft(t, b, c, d) {
+      if (t < 20) {
+        return (b & c) | (~b & d);
+      }
+      if (t < 40) {
+        return b ^ c ^ d;
+      }
+      if (t < 60) {
+        return (b & c) | (b & d) | (c & d);
+      }
+      return b ^ c ^ d;
+    }
+
     const H = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+    const K = [0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6];
 
-    const wordArray = [];
-    let strLen = str.length;
+    let i, t;
+    let a, b, c, d, e;
+    let temp;
 
-    const wordCount = ((strLen + 8) >> 6) + 1;
-    const byteCount = wordCount << 6;
+    const words = [];
+    const len = message.length;
 
-    for (i = 0; i < byteCount; i += 4) {
-      wordArray[i >> 2] |= (str.charAt(i / 4) & 0xff) << (24 - (i % 4) * 8);
-    }
-    wordArray[wordArray.length] = strLen << 3;
-    wordArray[wordArray.length] = strLen >>> 29;
+    // Append padding
+    message += String.fromCharCode(0x80); // Append single bit (1)
 
-    wordArray[wordArray.length] = 0;
+    // Append 0 <= k < 512 bits '0', so the resulting message length (in bytes) is congruent to 56 (mod 64)
+    message += String.fromCharCode(0).repeat(
+      (56 - ((len + 1) % sha1BlockSize) + sha1BlockSize) % sha1BlockSize
+    );
 
-    for (blockstart = 0; blockstart < wordArray.length; blockstart += 16) {
+    // Append length
+    message += String.fromCharCode(len >>> 29);
+    message += String.fromCharCode((len << 3) & 0xffffffff);
+
+    // Process the message in successive 512-bit chunks
+    for (let offset = 0; offset < message.length; offset += sha1BlockSize) {
+      // Break chunk into sixteen 32-bit big-endian words
       for (i = 0; i < 16; i++) {
-        W[i] = wordArray[blockstart + i];
-      }
-      for (i = 16; i <= 79; i++) {
-        W[i] = rotateLeft(W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16], 1);
+        words[i] =
+          (message.charCodeAt(offset + i * 4) << 24) |
+          (message.charCodeAt(offset + i * 4 + 1) << 16) |
+          (message.charCodeAt(offset + i * 4 + 2) << 8) |
+          message.charCodeAt(offset + i * 4 + 3);
       }
 
-      A = H[0];
-      B = H[1];
-      C = H[2];
-      D = H[3];
-      E = H[4];
+      // Extend the sixteen 32-bit words into eighty 32-bit words
+      for (i = 16; i < 80; i++) {
+        words[i] = rotateLeft(
+          words[i - 3] ^ words[i - 8] ^ words[i - 14] ^ words[i - 16],
+          1
+        );
+      }
 
-      for (i = 0; i <= 19; i++) {
+      a = H[0];
+      b = H[1];
+      c = H[2];
+      d = H[3];
+      e = H[4];
+
+      // Main loop
+      for (t = 0; t < 80; t++) {
         temp =
-          (rotateLeft(A, 5) + ((B & C) | (~B & D)) + E + W[i] + 0x5a827999) &
-          0xffffffff;
-        E = D;
-        D = C;
-        C = rotateLeft(B, 30);
-        B = A;
-        A = temp;
+          (rotateLeft(a, 5) +
+            ft(t, b, c, d) +
+            e +
+            words[t] +
+            K[Math.floor(t / 20)]) >>>
+          0;
+        e = d;
+        d = c;
+        c = rotateLeft(b, 30) >>> 0;
+        b = a;
+        a = temp;
       }
 
-      for (i = 20; i <= 39; i++) {
-        temp =
-          (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0x6ed9eba1) & 0xffffffff;
-        E = D;
-        D = C;
-        C = rotateLeft(B, 30);
-        B = A;
-        A = temp;
-      }
-
-      for (i = 40; i <= 59; i++) {
-        temp =
-          (rotateLeft(A, 5) +
-            ((B & C) | (B & D) | (C & D)) +
-            E +
-            W[i] +
-            0x8f1bbcdc) &
-          0xffffffff;
-        E = D;
-        D = C;
-        C = rotateLeft(B, 30);
-        B = A;
-        A = temp;
-      }
-
-      for (i = 60; i <= 79; i++) {
-        temp =
-          (rotateLeft(A, 5) + (B ^ C ^ D) + E + W[i] + 0xca62c1d6) & 0xffffffff;
-        E = D;
-        D = C;
-        C = rotateLeft(B, 30);
-        B = A;
-        A = temp;
-      }
-
-      H[0] = (H[0] + A) & 0xffffffff;
-      H[1] = (H[1] + B) & 0xffffffff;
-      H[2] = (H[2] + C) & 0xffffffff;
-      H[3] = (H[3] + D) & 0xffffffff;
-      H[4] = (H[4] + E) & 0xffffffff;
+      // Add this chunk's hash to result so far
+      H[0] += a;
+      H[1] += b;
+      H[2] += c;
+      H[3] += d;
+      H[4] += e;
     }
 
-    const hash = (
-      H[0] +
-      H[1] * 0x100000000 +
-      H[2] * 0x100000000 * 0x100000000 +
-      H[3] * 0x100000000 * 0x100000000 * 0x100000000 +
-      H[4] * 0x100000000 * 0x100000000 * 0x100000000 * 0x100000000
-    ).toString(16);
+    // Produce the final hash value
+    const hash =
+      ((H[0] << 24) | (H[1] << 16) | (H[2] << 8) | H[3]).toString(16) +
+      (H[4] >>> 0).toString(16);
 
-    // Pad the hash to make sure it's 40 characters long
-    return "0".repeat(40 - hash.length) + hash;
+    return hash;
   }
 
   forApp(str, secret) {

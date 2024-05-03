@@ -1,6 +1,6 @@
 {
   "name": "js-google-authenticator",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "2 step verification function library with Google Authenticator",
   "main": "GoogleAuthenticator.js",
   "scripts": {
