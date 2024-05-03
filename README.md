@@ -55,3 +55,6 @@ console.log(`HOTP code: ${hotpCode}`);
 const app = authenticator.forApp(string, secretKey);
 console.log(`Google Authenticator App Otp Link: ${app}`);
 ```
+
+**You wanna support me?**
+[https://buymeacoffee.com/oxcakmak](https://buymeacoffee.com/oxcakmak)
