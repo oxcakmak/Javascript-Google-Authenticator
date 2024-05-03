@@ -8,7 +8,8 @@ Javascript Google Authenticator
 
 ```js
 /*
- * Decode and verify functions are under maintenance because they contain errors.
+ * Since the verifyCode function accepts every code...
+ * ...entered, it is under maintenance.
  * @
  * Other functions are working.
  */
